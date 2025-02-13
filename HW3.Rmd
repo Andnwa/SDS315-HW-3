@@ -1,0 +1,365 @@
+---
+title: "HW3"
+author: "Andrea Nwaokolo"
+date: "2025-02-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(kableExtra)
+library(mosaic)
+gas_price <- read.csv('GasPrices.csv')
+sclass <- read.csv('sclass.csv')
+ebay <-  read.csv('ebay.csv')
+nbc_survey <- read.csv('nbc_pilotsurvey.csv')
+```
+
+## Problem One
+
+<br>
+
+Claim:
+Gas stations charge more if they lack direct competition in sight.
+
+
+```{r, echo=FALSE, results='hide'}
+ggplot(data = gas_price) + geom_boxplot(aes(x = Competitors, y = Price, fill = Competitors)) + labs(title = "Gas Price Distribution: Stations with and without Nearby Competitors", x = "Competitors") + theme_classic()
+
+ gas_price %>%
+  group_by(Competitors) %>%
+  summarise(
+    min_score = min(Price, na.rm = TRUE),
+    q1 = quantile(Price, 0.25, na.rm = TRUE),
+    median_score = median(Price, na.rm = TRUE),
+    mean_score = mean(Price, na.rm = TRUE),
+    q3 = quantile(Price, 0.75, na.rm = TRUE),
+    max_score = max(Price, na.rm = TRUE),
+    iqr = IQR(Price, na.rm = TRUE),
+    n = n()  
+  )
+
+
+```
+
+
+Evidence:
+The boxplot above shows the distribution of gas prices at stations with and without nearby competitors. It shows that gas stations without competition have a wider range of gas prices compared to those with competition. Both groups share the same minimum price of $1.73. However, gas stations without competition have a higher median price of $1.89, while stations with competition have a median price of $1.85. Additionally, the maximum price at gas stations without competition is higher, at $2.09, compared to $1.99 at stations with competition.
+
+
+
+Conclusion:
+The evidence supports the claim that gas stations without direct competition charge higher prices. While both groups have the same minimum price, stations without competition tend to have a higher median and maximum price, as well as greater variability in prices.
+
+
+<br>
+<br>
+
+Claim:
+The richer the area, the higher the gas prices.
+
+
+```{r, echo=FALSE, results='hide'}
+ggplot(data = gas_price) + geom_point(aes(x = Price , y = Income)) + labs(title = "Realtionship between Gas Prices and Median Income at Zipcode", x = "Gas Prices", y = "Income") + theme_classic()
+
+cor(gas_price$Price, gas_price$Income)
+```
+
+Evidence:
+The scatter plot visualizes the relationship between gas prices and median income across different zip codes. The correlation coefficient between gas prices and median income is 0.40, indicating a weak positive relationship. A correlation of 0.40 suggests a moderate trend but not a strong linear relationship.
+
+
+
+Conclusion:
+Based on the correlation value of 0.40, there is not enough evidence to support the claim that "the richer the area, the higher the gas prices." The relationship is weak and does not exhibit a strong linear correlation, meaning that the claim is not supported by the data.
+
+<br>
+<br>
+
+Claim:
+Gas stations at stoplights charge more.
+
+
+```{r, echo=FALSE, results='hide'}
+ggplot(data = gas_price) + geom_boxplot(aes(x = Stoplight, y = Price, fill = Stoplight)) + labs(title = "Gas Price Distribution: Stations with and without a Stoplight in front", x = "Stoplight") + theme_classic()
+
+ gas_price %>%
+  group_by(Stoplight) %>%
+  summarise(
+    min_score = min(Price, na.rm = TRUE),
+    q1 = quantile(Price, 0.25, na.rm = TRUE),
+    median_score = median(Price, na.rm = TRUE),
+    mean_score = mean(Price, na.rm = TRUE),
+    q3 = quantile(Price, 0.75, na.rm = TRUE),
+    max_score = max(Price, na.rm = TRUE),
+    iqr = IQR(Price, na.rm = TRUE),
+    n = n()  
+  )
+
+
+```
+
+Evidence:
+The boxplot above displays the distribution of gas prices for stations with and without a stoplight in front of them. Gas stations without a stoplight exhibit a greater price range compared to those with a stoplight. The minimum price for both types of stations is $1.73. However, the median price for stations without a stoplight is $1.84, and the maximum price is $2.09. For stations with a stoplight, the median price is $1.87, with a maximum price of $1.99.
+
+
+
+Conclusion:
+While stations with a stoplight have a higher median price, the evidence does not strongly support the claim that gas stations at stoplights charge more overall. Although the median price is higher, the maximum price at stations without a stoplight is higher, and the price range is wider.
+
+
+<br>
+<br>
+
+Claim:
+Gas stations with direct highway access charge more.
+
+
+```{r, echo=FALSE, results='hide'}
+ggplot(data = gas_price) + geom_boxplot(aes(x = Highway, y = Price, fill = Highway)) + labs(title = "Gas Price Distribution: Highway-Accessible vs. Non-Accessible Stations", x = "Highway") + theme_classic()
+
+ gas_price %>%
+  group_by(Highway) %>%
+  summarise(
+    min_score = min(Price, na.rm = TRUE),
+    q1 = quantile(Price, 0.25, na.rm = TRUE),
+    median_score = median(Price, na.rm = TRUE),
+    mean_score = mean(Price, na.rm = TRUE),
+    q3 = quantile(Price, 0.75, na.rm = TRUE),
+    max_score = max(Price, na.rm = TRUE),
+    iqr = IQR(Price, na.rm = TRUE),
+    n = n()  
+  )
+
+```
+Evidence:
+The boxplot above shows the distribution of gas prices for stations that are either accessible from a highway or a highway access road. The minimum price for both groups is $1.73. The median price for stations that are not highway accessible is $1.84, with a maximum price of $2.09. On the other hand, the median price for highway-accessible gas stations is $1.89, and their maximum price is $2.00.
+
+
+Conclusion:
+Although the median price for highway-accessible stations is slightly higher than for those without highway access, the evidence does not strongly support the claim that gas stations with direct highway access consistently charge more. The maximum price for stations that are not highway accessible is higher, and the overall price range is wider. 
+
+
+
+<br>
+<br>
+
+Claim:
+Shell charges more than all other non-Shell brands.
+
+
+```{r, echo=FALSE, results='hide'}
+
+gas_price <- gas_price %>%
+  mutate(Brand_Group = ifelse(Brand == "Shell", "Shell", "Non-Shell"))
+
+ggplot(data = gas_price) + geom_boxplot(aes(x = Brand_Group, y = Price, fill = Brand_Group)) + labs(title = "Gas Price Distribution: Shell vs. Non-Shell Brands", x = "Brand Group", y = "Price") + theme_classic()
+
+gas_price %>%
+  group_by(Brand_Group) %>%
+  summarise(
+    min_score = min(Price, na.rm = TRUE),
+    q1 = quantile(Price, 0.25, na.rm = TRUE),
+    median_score = median(Price, na.rm = TRUE),
+    mean_score = mean(Price, na.rm = TRUE),
+    q3 = quantile(Price, 0.75, na.rm = TRUE),
+    max_score = max(Price, na.rm = TRUE),
+    iqr = IQR(Price, na.rm = TRUE),
+    n = n()  
+  )
+
+
+
+```
+
+Evidence:
+The boxplot above displays the distribution of gas prices for Shell and non-Shell gas stations. The median price for non-Shell stations is $1.84, with a maximum price of $2.09. For Shell stations, the median price is slightly higher at $1.89, with the maximum price also reaching $2.09. Additionally, Shell stations show an outlier, indicating a price that is notably higher than the others.
+
+Conclusion:
+Based on the distribution of gas prices shown in the boxplot and the summary statistics, the claim that "Shell charges more than all other non-Shell brands" is partially supported. While Shell has a slightly higher median price, both Shell and non-Shell stations share the same maximum price, and the presence of an outlier in the Shell group suggests variability that may not uniformly support the claim.
+
+
+<br>
+<br>
+<br>
+
+
+## Problem Two
+
+#### Part A:
+
+
+```{r, echo=FALSE, results='hide'}
+sclass_2011 <- sclass %>%
+  filter(year == 2011 & trim == "63 AMG")
+
+mile_sclass_2011 <- sclass_2011$mileage
+
+boot_sclass_2011 <- do(1000) * mean(resample(mile_sclass_2011))
+ggplot(boot_sclass_2011) + geom_histogram(aes(x=mean), bins = 30)
+
+
+confint(boot_sclass_2011, level=0.95)
+  
+  
+  
+```
+The average mileage of 2011 S-Class 63 AMGs available in the used-car market is estimated to be 28,997.34 miles. Based on a 95% confidence interval, we can say that the true average mileage for these cars is likely to fall between 26,274.39 miles and 31,853.25 miles.
+
+<br>
+
+#### Part B:
+
+
+```{r, echo=FALSE, results='hide'}
+sclass_2014 <- sclass %>%
+  filter(year == 2014 & trim == "550")
+  
+black_sclass_2014 <- sclass_2014 %>%
+  mutate(isBlack = color == "Black")
+
+  
+boot_sclass_2014 <- do(1000) * prop(resample(black_sclass_2014$isBlack))
+ggplot(boot_sclass_2014) + geom_histogram(aes(x=prop_TRUE), bins = 30)
+
+
+confint(boot_sclass_2014, level=0.95)
+  
+```
+The estimated proportion of all 2014 S-Class 550 cars that were painted black is 0.435. Based on a 95% bootstrap confidence interval, we are 95% confident that the true proportion of black cars among the 2014 S-Class 550s falls between 0.418 and 0.453.
+
+<br>
+<br>
+<br>
+
+
+## Problem Three
+
+
+
+#### Part A:
+
+Question: 
+Is there evidence that the happiness levels (measured by Q1_Happy) in "Living with Ed" are greater than those in "My Name is Earl"?
+
+
+Approach: I took a bootstrap sample of my data 1000 times and for each sample I found the difference of the means. I then computed a 95% confidence interval of the difference in mean. 
+
+
+```{r, echo=FALSE, results='hide'}
+nbc_happier <- nbc_survey %>%
+  filter(Show == "Living with Ed" |Show == "My Name is Earl")
+
+boot_nbc_happier <- do(1000) * diffmean(Q1_Happy ~ Show, data=resample(nbc_happier))
+
+ggplot(boot_nbc_happier) + geom_histogram(aes(x=diffmean), bins = 30)
+
+confint(boot_nbc_happier, level=0.95)
+
+
+```
+
+Results: From the bootstrap samples, the mean difference in happiness scores between the two shows is approximately -0.149. I am 95% confident that the actual difference in happiness falls between -0.396 and -0.113.
+
+
+Conclusion: The 95% confidence interval for the difference in mean happiness scores between the two shows, "Living with Ed" and "My Name is Earl", is (-0.396, -0.113). Since the entire confidence interval is below 0 this suggests on average, viewers of "Living with Ed" report lower happiness levels compared to viewers of "My Name is Earl." Therefore, there is evidence to suggest that "My Name is Earl" consistently produces a higher mean happiness response among viewers compared to "Living with Ed."
+
+
+<br>
+
+
+
+#### Part B:
+
+Question: 
+Which reality/contest show “The Biggest Loser” or “The Apprentice: Los Angeles" made people feel more annoyed?
+
+
+Approach: I took a bootstrap sample of my data 1000 times and for each sample I found the difference of the means. I then computed a 95% confidence interval of the difference in mean. 
+
+
+```{r, echo=FALSE,  results='hide'}
+nbc_annoy <- nbc_survey %>%
+  filter(Show == "The Biggest Loser" |Show == "The Apprentice: Los Angeles")
+
+boot_nbc_annoy <- do(1000) * diffmean(Q1_Annoyed ~ Show, data=resample(nbc_annoy))
+
+ggplot(boot_nbc_annoy) + geom_histogram(aes(x=diffmean), bins = 30)
+
+confint(boot_nbc_annoy, level=0.95)
+```
+Results: From the bootstrap samples, the mean difference in annoyance scores between the two shows is approximately -0.271 estimate 95% confident that the actual difference in annoyance falls between -0.507 and -0.030.
+
+
+Conclusion: The 95% confidence interval for the difference in mean annoyance score for "The Biggest Loser" and "The Apprentice: Los Angeles", is (-0.507 , -0.030.). Since the entire confidence interval is below 0 this suggests on average, viewers of "The Biggest Loser" report lower annoyance score compared to viewers of "The Apprentice: Los Angeles." Therefore, there is evidence to suggest that "The Apprentice: Los Angeles" consistently produces a higher mean happiness response among viewers compared to "The Biggest Loser."
+
+<br>
+
+#### Part C:
+
+What is the proportion of viewers of "Dancing with the Stars" who responded with a 4 or 5 on the Q2_Confusing question?
+
+
+Approach: I took a bootstrap sample of my data 1000 times and for each sample I found the proportion of people who responded with a 4 or higher. I then computed a 95% confidence interval of that proportion. 
+
+
+```{r, echo=FALSE,  results='hide'}
+nbc_confuse <- nbc_survey %>%
+  filter(Show == "Dancing with the Stars") %>%
+  mutate(confues_4_more = ifelse(Q2_Confusing >= 4, 1, 0))
+
+
+boot_nbc_confuse <- do(1000) * {
+  resample_data <- resample(nbc_confuse)
+  prop(ifelse(resample_data$Q2_Confusing >= 4, 1, 0) ~ 1)  # Proportion of 4 or 5
+}
+                                    
+
+ggplot(boot_nbc_confuse) + 
+  geom_histogram(aes(x = prop_1.1), bins = 30)  
+
+confint(boot_nbc_confuse, level=0.95)
+
+```
+
+
+Results: From the bootstrap samples, the probability for viewers response to be 4 or above is approximately 0.077. I am 95% confident that the actual difference in happiness falls between 0.044 and 0.122.
+
+
+Conclusion: The 95% confidence interval for the proportion of viewers who found Dancing with the Stars confusing is (0.044, 0.122), with a point estimate of approximately 0.077, or 7.7%. Since the entire confidence interval is above 0, this suggests that a notable proportion of viewers find the show confusing. Therefore, we can conclude that Dancing with the Stars generates a higher level of confusion among its audience compared to what is expected from the general TV-watching population.
+
+
+
+
+<br>
+<br>
+<br>
+
+
+
+
+## Problem Four
+
+Question: Is there a significant difference in the revenue ratio between DMAs where paid search advertising was paused and those where it continued?
+
+Approach: I found the ratio of revenue for all the samples and did a bootstrap sample of the difference in mean of that ratio and then found the 95% confidence interval. 
+
+
+```{r, echo=FALSE,  results='hide'}
+ebay_ration <- ebay %>%
+  mutate(revenue_ratio = rev_after/rev_before)
+
+boot_ebay_ration <- do(1000) * diffmean(revenue_ratio ~ adwords_pause, data=resample(ebay_ration))
+
+ggplot(boot_ebay_ration) + geom_histogram(aes(x = diffmean), bins = 30) 
+
+confint(boot_ebay_ration, level=0.95)
+
+```
+
+Results:From the bootstrap samples, the mean difference in revenue ratios between the control and treatment group is approximately -0.052. I am 95% confident that the actual difference in happiness falls between -0.090 and -0.011.
+
+
+Conclusion: The 95% confidence interval for the difference in revenue ratios between the control, where paid search advertising was paused, and treatment, where paid search continued, groups is (-0.090, -0.011). Since the entire confidence interval is below 0, this suggests that the revenue ratio is lower in the treatment-group DMAs compared to the control-group DMAs. This provides evidence that paid search advertising on Google may be driving extra revenue for eBay, as the treatment group shows a statistically significant decrease in the revenue ratio. Therefore, we can conclude that the data supports the idea that eBay's paid search advertising on Google has a positive impact on revenue.
